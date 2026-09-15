@@ -1,0 +1,58 @@
+{
+    "name": "karelwintersky/waymark",
+    "description": "Waymark Application",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Karel Wintersky",
+            "email": "karel.wintersky@yandex.ru"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "ext-intl": "*",
+        "ext-curl": "*",
+        "ext-gd": "*",
+        "ext-fileinfo": "*",
+        "ext-mbstring": "*",
+        "ext-redis": "*",
+        "psr/log": "*",
+        "karelwintersky/arris": "^2",
+        "karelwintersky/arris.database": "^2",
+        "karelwintersky/arris.logger": "^2",
+        "karelwintersky/arris.router": "^2",
+        "karelwintersky/arris.toolkit.cli-console": "^1.3",
+        "karelwintersky/arris.presenter": "^1.4",
+        "karelwintersky/arris.cache": "^1.0",
+        "karelwintersky/arris.delight-php-auth": "^0.99.9",
+        "karelwintersky/arris.php-file-upload": "*",
+        "karelwintersky/arris.toolkit.mimetypes": "^2.1",
+        "symfony/yaml": "^7.4",
+        "laravel/prompts": "^0.3.18",
+        "symfony/cache": "^6.4",
+        "league/flysystem": "^3.35",
+        "league/flysystem-local": "^3.31",
+        "spatie/temporary-directory": "^2.4"
+    },
+    "autoload": {
+        "files": [
+            "app/_functions.php"
+        ],
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satisfactor.wintersky.ru"
+        },
+        { "packagist.org": false }
+    ],
+    "config": {
+        "secure-http": true
+    }
+}
