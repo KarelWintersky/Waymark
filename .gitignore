@@ -6,4 +6,6 @@ storage
 public/storage
 
 composer.lock
+_config.yaml
+
 
