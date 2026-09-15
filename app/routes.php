@@ -23,6 +23,7 @@ return static function (): void {
     R::addHandler(\App\Controllers\HealthController::class, new \App\Controllers\HealthController($app, $logger, $jsonPresenter));
     R::addHandler(\App\Controllers\PageController::class, new \App\Controllers\PageController($app, $logger, $pagePresenter));
     R::addHandler(\App\Controllers\AuthController::class, new \App\Controllers\AuthController($app, $logger, $pagePresenter));
+    R::addHandler(\App\Controllers\TrackController::class, new \App\Controllers\TrackController($app, $logger, $pagePresenter));
 
     // Health check
     R::get('/health', [\App\Controllers\HealthController::class, 'health'], 'health');
@@ -38,6 +39,14 @@ return static function (): void {
     R::post('/logout', [\App\Controllers\AuthController::class, 'logout'], 'logout');
     R::get('/register', [\App\Controllers\AuthController::class, 'register'], 'register');
     R::get('/password/forgot', [\App\Controllers\AuthController::class, 'forgotPassword'], 'password_forgot');
+
+    // Треки (CRUD, только авторизованные; публикация — задачи 12-13)
+    R::get('/my/tracks', [\App\Controllers\TrackController::class, 'myTracks'], 'my_tracks');
+    R::get('/tracks/create', [\App\Controllers\TrackController::class, 'create'], 'track_create');
+    R::post('/tracks/create', [\App\Controllers\TrackController::class, 'create']);
+    R::get('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit'], 'track_edit');
+    R::post('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit']);
+    R::post('/tracks/{id:\d+}/delete', [\App\Controllers\TrackController::class, 'delete'], 'track_delete');
 
     // TODO: остальные маршруты из раздела 8 ТЗ (по мере выполнения задач ROADMAP).
 };

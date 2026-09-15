@@ -40,6 +40,7 @@ final class AppConfig
                 'public'    => $root . '/public',
                 'storage'   => $root . '/storage',
                 'media'     => $root . '/storage/media',
+                'tracks'    => $root . '/storage/tracks',
                 'cache'     => $root . '/storage/cache',
                 'logs'      => $root . '/storage/logs',
                 'templates' => $root . '/templates',

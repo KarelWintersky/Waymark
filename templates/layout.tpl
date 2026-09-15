@@ -14,6 +14,7 @@
             <a href="/">Главная</a>
             <a href="/tracks">Публичные треки</a>
             {if $current_user|default:null}
+                <a href="/my/tracks">Мои треки</a>
                 <a href="/users/{$current_user.id}">{$current_user.username|escape}</a>
                 <form method="post" action="/logout" class="logout-form">
                     <button type="submit" class="link-button">Выйти</button>
