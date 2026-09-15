@@ -25,20 +25,71 @@ DROP TABLE IF EXISTS `users`;
 -- users — пользователи
 -- ------------------------------------------------------------
 
-CREATE TABLE `users` (
-    `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `email`         VARCHAR(255) NOT NULL,
-    `password_hash` VARCHAR(255) NOT NULL,
-    `name`          VARCHAR(255) NOT NULL DEFAULT '',
-    `avatar_path`   VARCHAR(500) NULL,
-    `role`          ENUM('user','admin') NOT NULL DEFAULT 'user',
+CREATE TABLE IF NOT EXISTS `users` (
+    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `email` varchar(249) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `password` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL COMMENT 'password hash',
+    `username` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `status` tinyint(2) unsigned NOT NULL DEFAULT '0',
+    `verified` tinyint(1) unsigned NOT NULL DEFAULT '0',
+    `resettable` tinyint(1) unsigned NOT NULL DEFAULT '1',
+    `roles_mask` int(10) unsigned NOT NULL DEFAULT '0',
+    `registered` int(10) unsigned NOT NULL,
+    `last_login` int(10) unsigned DEFAULT NULL,
+    `force_logout` mediumint(7) unsigned NOT NULL DEFAULT '0',
     `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at`    DATETIME NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_users_email` (`email`),
-    KEY `idx_users_deleted` (`deleted_at`)
+    UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `users_confirmations` (
+    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `user_id` int(10) unsigned NOT NULL,
+    `email` varchar(249) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `selector` varchar(16) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `token` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `expires` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `selector` (`selector`),
+    KEY `email_expires` (`email`,`expires`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `users_remembered` (
+    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    `user` int(10) unsigned NOT NULL,
+    `selector` varchar(24) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `token` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `expires` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `selector` (`selector`),
+    KEY `user` (`user`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `users_resets` (
+    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    `user` int(10) unsigned NOT NULL,
+    `selector` varchar(20) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `token` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `expires` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `selector` (`selector`),
+    KEY `user_expires` (`user`,`expires`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `users_throttling` (
+    `bucket` varchar(44) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+    `tokens` float unsigned NOT NULL,
+    `replenished_at` int(10) unsigned NOT NULL,
+    `expires_at` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`bucket`),
+    KEY `expires_at` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
 
 -- ------------------------------------------------------------
 -- tracks — треки: метаданные, геометрия (JSON), bbox, видимость
