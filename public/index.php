@@ -26,20 +26,30 @@ date_default_timezone_set((string)$app->fromConfig('app.timezone', 'UTC'));
 
 // Логгер
 AppLogger::init(
-    (string)$app->config('app.name'),
+    (string)$app->fromConfig('app.name', 'Waymark'),
     bin2hex(random_bytes(8)),
     [
-        'default_logfile_path' => (string)$app->config('paths.logs'),
+        'default_logfile_path' => (string)$app->fromConfig('paths.logs'),
         'default_log_level'    => Logger::DEBUG,
     ]
 );
 
 AppLogger::addScope('app', [
-    ['app.debug.log', Logger::DEBUG, ['enable' => (bool)$app->config('app.debug')]],
+    ['app.debug.log', Logger::DEBUG, ['enable' => (bool)$app->fromConfig('app.debug', false)]],
     ['app.error.log', Logger::ERROR, ['enable' => true]],
 ]);
 
 $app->logger('app')->info('Request started', ['uri' => $_SERVER['REQUEST_URI'] ?? '/']);
+
+// Помощник: HTML-страница ошибки
+$pagePresenter = new \App\Presenters\TemplatePresenter($app->template());
+
+$errorPage = static function (string $template, int $status, string $title) use ($pagePresenter): void {
+    $pagePresenter->present([
+        'template' => $template,
+        'title'    => $title,
+    ], $status);
+};
 
 // Маршруты
 $routes = require __DIR__ . '/../app/routes.php';
@@ -49,14 +59,10 @@ $routes();
 try {
     \Arris\AppRouter::dispatch();
 } catch (AppRouterNotFoundException $e) {
-    http_response_code(404);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['status' => 'error', 'message' => 'Not Found'], JSON_UNESCAPED_UNICODE);
     $app->logger('app')->warning('Route not found', ['uri' => $_SERVER['REQUEST_URI'] ?? '/']);
+    ($errorPage)('errors/404.tpl', 404, 'Страница не найдена');
 } catch (AppRouterMethodNotAllowedException $e) {
-    http_response_code(405);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['status' => 'error', 'message' => 'Method Not Allowed'], JSON_UNESCAPED_UNICODE);
+    ($errorPage)('errors/404.tpl', 405, 'Метод не разрешён');
 } catch (Throwable $e) {
     $app->logger('app')->error('Unhandled exception', [
         'exception' => $e::class,
@@ -64,7 +70,5 @@ try {
         'file'      => $e->getFile() . ':' . $e->getLine(),
     ]);
 
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['status' => 'error', 'message' => 'Internal Server Error'], JSON_UNESCAPED_UNICODE);
+    ($errorPage)('errors/500.tpl', 500, 'Ошибка сервера');
 }

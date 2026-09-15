@@ -1,0 +1,126 @@
+/* Waymark — базовая публичная страница */
+
+:root {
+    --bg: #f7f5f2;
+    --fg: #2b2320;
+    --muted: #8a7f76;
+    --accent: #c0532f;
+    --card-bg: #ffffff;
+    --border: #e4ddd5;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: min(960px, 100% - 2rem);
+    margin: 0 auto;
+}
+
+main.container { flex: 1; padding: 2rem 0 3rem; }
+
+/* Шапка */
+.site-header {
+    background: var(--fg);
+    color: #fff;
+}
+
+.site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0;
+}
+
+.brand {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+}
+
+.site-nav { display: flex; gap: 1.2rem; }
+
+.site-nav a {
+    color: #e8ded5;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.site-nav a:hover { color: #fff; text-decoration: underline; }
+
+/* Футер */
+.site-footer {
+    background: var(--fg);
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 1rem 0;
+}
+
+/* Герой-блок */
+.hero { padding: 2.5rem 0 1.5rem; }
+
+.hero h1 { font-size: 2.4rem; margin: 0 0 0.5rem; }
+
+.lead { font-size: 1.15rem; color: var(--muted); margin: 0; max-width: 40rem; }
+
+/* Список треков */
+.track-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.track-card {
+    display: block;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.track-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.track-card__title { font-size: 1.05rem; font-weight: 600; }
+
+.track-card__author { margin-top: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+
+.track-card__date { margin-top: 0.2rem; color: var(--muted); font-size: 0.8rem; }
+
+/* Пустые состояния */
+.empty {
+    color: var(--muted);
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+}
+
+.muted { color: var(--muted); }
+
+h1, h2 { line-height: 1.25; }
+
+h2 { margin-top: 2rem; }

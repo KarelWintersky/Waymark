@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App;
 
 use Arris\AppLogger;
+use Arris\Database\Config;
+use Arris\Database\Connector;
+use Arris\Presenter\Template;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -20,6 +23,8 @@ final class App extends \Arris\App
     public const CONFIG_FILENAME = '_config.yaml';
 
     private ?\PDO $pdo = null;
+
+    private ?Template $template = null;
 
     protected function getDefaultConfig(): array
     {
@@ -42,15 +47,35 @@ final class App extends \Arris\App
     public function pdo(): \PDO
     {
         if ($this->pdo === null) {
-            $connection = new \Arris\Database\Config(
-                $this->getConfig('db'),
-                $this->logger('db')
-            );
+            $config = new Config();
+            $config
+                ->setHost(App::fromConfig('db.hostname'))
+                ->setDatabase(App::fromConfig('db.database'))
+                ->setUsername(App::fromConfig('db.username'))
+                ->setPassword(App::fromConfig('db.password'));
 
-            $this->pdo = $connection->connect();
+            $this->pdo = new Connector($config);
         }
 
         return $this->pdo;
+    }
+
+    /**
+     * Шаблонизатор (Smarty через Arris\Presenter\Template), ленивая инициализация.
+     */
+    public function template(): Template
+    {
+        if ($this->template === null) {
+            Template::setDefaults([
+                'setTemplateDir'   => (string)$this->fromConfig('paths.templates'),
+                'setCompileDir'    => (string)$this->fromConfig('paths.cache') . '/smarty',
+                'setForceCompile'  => (bool)$this->fromConfig('app.debug', false),
+            ]);
+
+            $this->template = Template::make([], $this->logger('app'));
+        }
+
+        return $this->template;
     }
 
     /**
