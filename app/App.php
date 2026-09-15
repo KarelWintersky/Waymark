@@ -7,6 +7,7 @@ namespace App;
 use Arris\AppLogger;
 use Arris\Database\Config;
 use Arris\Database\Connector;
+use Arris\DelightAuth\Auth\Auth;
 use Arris\Presenter\Template;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -25,6 +26,8 @@ final class App extends \Arris\App
     private ?\PDO $pdo = null;
 
     private ?Template $template = null;
+
+    private ?Auth $auth = null;
 
     protected function getDefaultConfig(): array
     {
@@ -76,6 +79,23 @@ final class App extends \Arris\App
         }
 
         return $this->template;
+    }
+
+    /**
+     * Авторизация (Arris\DelightAuth\Auth), ленивая инициализация.
+     * Троттлинг отключается в debug-режиме (удобно для разработки).
+     */
+    public function auth(): Auth
+    {
+        if ($this->auth === null) {
+            $this->auth = new Auth(
+                databaseConnection: $this->pdo(),
+                dbTablePrefix: '',
+                throttling: (bool)!$this->fromConfig('app.debug', false),
+            );
+        }
+
+        return $this->auth;
     }
 
     /**

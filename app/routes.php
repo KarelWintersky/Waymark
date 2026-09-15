@@ -22,6 +22,7 @@ return static function (): void {
 
     R::addHandler(\App\Controllers\HealthController::class, new \App\Controllers\HealthController($app, $logger, $jsonPresenter));
     R::addHandler(\App\Controllers\PageController::class, new \App\Controllers\PageController($app, $logger, $pagePresenter));
+    R::addHandler(\App\Controllers\AuthController::class, new \App\Controllers\AuthController($app, $logger, $pagePresenter));
 
     // Health check
     R::get('/health', [\App\Controllers\HealthController::class, 'health'], 'health');
@@ -30,6 +31,13 @@ return static function (): void {
     R::get('/', [\App\Controllers\PageController::class, 'home'], 'home');
     R::get('/tracks', [\App\Controllers\PageController::class, 'tracks'], 'tracks');
     R::get('/users/{id:\d+}', [\App\Controllers\PageController::class, 'user'], 'user');
+
+    // Авторизация
+    R::get('/login', [\App\Controllers\AuthController::class, 'login'], 'login');
+    R::post('/login', [\App\Controllers\AuthController::class, 'login']);
+    R::post('/logout', [\App\Controllers\AuthController::class, 'logout'], 'logout');
+    R::get('/register', [\App\Controllers\AuthController::class, 'register'], 'register');
+    R::get('/password/forgot', [\App\Controllers\AuthController::class, 'forgotPassword'], 'password_forgot');
 
     // TODO: остальные маршруты из раздела 8 ТЗ (по мере выполнения задач ROADMAP).
 };

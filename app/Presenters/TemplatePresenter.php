@@ -19,6 +19,14 @@ final class TemplatePresenter
     {
     }
 
+    /**
+     * Глобальная переменная шаблона (видна во всех страницах текущего запроса).
+     */
+    public function assign(string $key, mixed $value): void
+    {
+        $this->template->assign($key, $value);
+    }
+
     public function present(array $payload, int $statusCode = 200): void
     {
         $this->template->assign('year', date('Y'));

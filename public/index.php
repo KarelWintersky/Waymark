@@ -44,6 +44,17 @@ $app->logger('app')->info('Request started', ['uri' => $_SERVER['REQUEST_URI'] ?
 // Помощник: HTML-страница ошибки
 $pagePresenter = new \App\Presenters\TemplatePresenter($app->template());
 
+// Текущий пользователь для шапки (сессии delight-auth)
+$auth = $app->auth();
+$currentUser = null;
+if ($auth->isLoggedIn()) {
+    $currentUser = [
+        'id'       => $auth->getUserId(),
+        'username' => $auth->getUsername(),
+    ];
+}
+$pagePresenter->assign('current_user', $currentUser);
+
 $errorPage = static function (string $template, int $status, string $title) use ($pagePresenter): void {
     $pagePresenter->present([
         'template' => $template,
