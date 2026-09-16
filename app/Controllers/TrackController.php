@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Units\Track;
 use App\Units\TrackFiles;
 use App\Units\TrackImporter;
+use App\Units\TrackLinks;
 use Arris\Controllers\AbstractController;
 use Arris\DelightAuth\Auth\Auth;
 use DateTime;
@@ -36,6 +37,8 @@ final class TrackController extends AbstractController
 
     private TrackImporter $importer;
 
+    private TrackLinks $links;
+
     public function __construct(
         ?\Arris\App $app = null,
         ?LoggerInterface $logger = null,
@@ -47,6 +50,7 @@ final class TrackController extends AbstractController
         $this->track = new Track($this->app->pdo());
         $this->files = new TrackFiles();
         $this->importer = new TrackImporter();
+        $this->links = new TrackLinks($this->app->pdo());
     }
 
     private function requireLogin(): void
@@ -99,6 +103,12 @@ final class TrackController extends AbstractController
         foreach ($tracks as &$row) {
             $row['visibility_label'] = self::VISIBILITY_LABELS[$row['visibility']] ?? $row['visibility'];
             $row['source_file'] = $this->files->filePath($userId, (int)$row['id'], (string)$row['source']);
+            $row['share_url'] = null;
+
+            if ($row['visibility'] === 'protected') {
+                $link = $this->links->active((int)$row['id']);
+                $row['share_url'] = $link !== null ? '/shared/' . $link['token'] : null;
+            }
         }
         unset($row);
 
@@ -311,5 +321,65 @@ final class TrackController extends AbstractController
         }
 
         $this->redirect('/my/tracks');
+    }
+
+    /**
+     * «Опубликовать по ссылке»: visibility=protected + активный токен.
+     */
+    public function share(int $id): void
+    {
+        $this->requireLogin();
+        $this->requireMine($id);
+
+        $userId = (int)$this->auth->getUserId();
+        $ttlDays = (int)$this->app->fromConfig('links.ttl_days', 0);
+        $link = $this->links->ensure($id, $ttlDays);
+        $this->track->setVisibility($id, $userId, 'protected');
+
+        $this->logger->info('Track shared by link', ['track_id' => $id, 'user_id' => $userId]);
+        $this->redirect('/my/tracks');
+    }
+
+    public function publish(int $id): void
+    {
+        $this->requireLogin();
+        $this->requireMine($id);
+
+        $userId = (int)$this->auth->getUserId();
+        $this->links->revoke($id);
+        $this->track->setVisibility($id, $userId, 'public');
+
+        $this->logger->info('Track published', ['track_id' => $id, 'user_id' => $userId]);
+        $this->redirect('/my/tracks');
+    }
+
+    public function unpublish(int $id): void
+    {
+        $this->requireLogin();
+        $this->requireMine($id);
+
+        $userId = (int)$this->auth->getUserId();
+        $this->links->revoke($id);
+        $this->track->setVisibility($id, $userId, 'private');
+
+        $this->logger->info('Track made private', ['track_id' => $id, 'user_id' => $userId]);
+        $this->redirect('/my/tracks');
+    }
+
+    /**
+     * Проверка «трек существует и принадлежит» для операций публикации.
+     */
+    private function requireMine(int $id): void
+    {
+        $userId = (int)$this->auth->getUserId();
+
+        if ($this->track->findMine($id, $userId) === null) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Страница не найдена',
+            ], 404);
+
+            exit;
+        }
     }
 }

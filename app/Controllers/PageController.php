@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Units\Track;
+use App\Units\TrackLinks;
 use Arris\Controllers\AbstractController;
 use PDO;
 
@@ -86,20 +87,12 @@ final class PageController extends AbstractController
      * Страница трека с картой Leaflet.
      *
      * Виден: владелец (любая видимость) и все (только public). Приватные и
-     * «по ссылке» для чужих — 404 (по ссылке — задача 13).
+     * «по ссылке» для чужих — 404 (по ссылке — только /shared/{token}).
      */
     public function view(int $id): void
     {
         $track = (new Track($this->pdo))->findWithUser($id);
-
-        if ($track === null || $track['user_deleted'] !== null) {
-            $this->presenter->present([
-                'template' => 'errors/404.tpl',
-                'title'    => 'Страница не найдена',
-            ], 404);
-
-            return;
-        }
+        $this->requireTrackOrNotFound($track);
 
         $auth = $this->app->auth();
         $currentUserId = $auth->isLoggedIn() ? (int)$auth->getUserId() : null;
@@ -114,6 +107,51 @@ final class PageController extends AbstractController
             return;
         }
 
+        $this->renderTrackPage($track);
+    }
+
+    /**
+     * Доступ к треку по ссылке без авторизации: /shared/{token}.
+     */
+    public function shared(string $token): void
+    {
+        $link = (new TrackLinks($this->pdo))->findValid($token);
+
+        if ($link === null) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Ссылка недействительна',
+            ], 404);
+
+            return;
+        }
+
+        $track = (new Track($this->pdo))->findWithUser((int)$link['track_id']);
+        $this->requireTrackOrNotFound($track);
+
+        $this->renderTrackPage($track);
+    }
+
+    /**
+     * Отдаёт страницу 404, если трек (с автором) не найден.
+     */
+    private function requireTrackOrNotFound(?array $track): void
+    {
+        if ($track === null || $track['user_deleted'] !== null) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Страница не найдена',
+            ], 404);
+
+            exit;
+        }
+    }
+
+    /**
+     * Рендер страницы трека с картой (общий для владельца, публичного и по ссылке).
+     */
+    private function renderTrackPage(array $track): void
+    {
         $geometry = json_decode((string)($track['geometry'] ?? '[]'), true);
         if (!is_array($geometry)) {
             $geometry = [];

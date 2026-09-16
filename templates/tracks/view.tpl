@@ -46,7 +46,7 @@ window.WAYMARK = {
         return;
     }
 
-    var map = L.map('track-map', { scrollWheelZoom: false });
+    var map = L.map('track-map');
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,

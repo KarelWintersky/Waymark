@@ -271,6 +271,22 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 
 .inline-form { display: inline-block; margin: 0; }
 
+/* Чип со ссылкой «по ссылке» */
+.share-chip {
+    display: inline-block;
+    padding: 0.35rem 0.7rem;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-size: 0.82rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    word-break: break-all;
+}
+
+.share-chip a { color: var(--accent); text-decoration: none; }
+
+.share-chip a:hover { text-decoration: underline; }
+
 /* Форма трека */
 .track-form { display: grid; gap: 1rem; max-width: 42rem; }
 

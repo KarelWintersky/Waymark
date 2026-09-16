@@ -27,8 +27,30 @@
                 <a class="btn btn--ghost" href="/tracks/{$track.id}">Показать на карте</a>
                 <a class="btn btn--ghost" href="/tracks/{$track.id}/edit">Изменить</a>
 
-                <button class="btn btn--ghost" type="button" disabled title="Появится в задачах 12-13">Опубликовать по ссылке</button>
-                <button class="btn btn--ghost" type="button" disabled title="Появится в задачах 12-13">Опубликовать</button>
+                {if $track.visibility == 'private'}
+                    <form method="post" action="/tracks/{$track.id}/share" class="inline-form">
+                        <button type="submit" class="btn btn--ghost">Опубликовать по ссылке</button>
+                    </form>
+                    <form method="post" action="/tracks/{$track.id}/publish" class="inline-form">
+                        <button type="submit" class="btn btn--ghost">Опубликовать</button>
+                    </form>
+                {elseif $track.visibility == 'protected'}
+                    {if $track.share_url}
+                        <span class="share-chip">
+                            <a href="{$track.share_url}" target="_blank" rel="noopener">{$track.share_url}</a>
+                        </span>
+                    {/if}
+                    <form method="post" action="/tracks/{$track.id}/publish" class="inline-form">
+                        <button type="submit" class="btn btn--ghost">Опубликовать</button>
+                    </form>
+                    <form method="post" action="/tracks/{$track.id}/unpublish" class="inline-form">
+                        <button type="submit" class="btn btn--ghost">Сделать приватным</button>
+                    </form>
+                {else}
+                    <form method="post" action="/tracks/{$track.id}/unpublish" class="inline-form">
+                        <button type="submit" class="btn btn--ghost">Сделать приватным</button>
+                    </form>
+                {/if}
 
                 <form method="post" action="/tracks/{$track.id}/delete" class="inline-form"
                       onsubmit="return confirm('Удалить трек «{$track.title|escape:'javascript'}»? Файл будет удалён позже.');">

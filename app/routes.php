@@ -41,13 +41,21 @@ return static function (): void {
     R::get('/register', [\App\Controllers\AuthController::class, 'register'], 'register');
     R::get('/password/forgot', [\App\Controllers\AuthController::class, 'forgotPassword'], 'password_forgot');
 
-    // Треки (CRUD, только авторизованные; публикация — задачи 12-13)
+    // Треки (CRUD, только авторизованные)
     R::get('/my/tracks', [\App\Controllers\TrackController::class, 'myTracks'], 'my_tracks');
     R::get('/tracks/create', [\App\Controllers\TrackController::class, 'create'], 'track_create');
     R::post('/tracks/create', [\App\Controllers\TrackController::class, 'create']);
     R::get('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit'], 'track_edit');
     R::post('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit']);
     R::post('/tracks/{id:\d+}/delete', [\App\Controllers\TrackController::class, 'delete'], 'track_delete');
+
+    // Публикация (задачи 12-13)
+    R::post('/tracks/{id:\d+}/share', [\App\Controllers\TrackController::class, 'share'], 'track_share');
+    R::post('/tracks/{id:\d+}/publish', [\App\Controllers\TrackController::class, 'publish'], 'track_publish');
+    R::post('/tracks/{id:\d+}/unpublish', [\App\Controllers\TrackController::class, 'unpublish'], 'track_unpublish');
+
+    // Доступ к скрытому треку по ссылке (без авторизации)
+    R::get('/shared/{token}', [\App\Controllers\PageController::class, 'shared'], 'shared');
 
     // TODO: остальные маршруты из раздела 8 ТЗ (по мере выполнения задач ROADMAP).
 };

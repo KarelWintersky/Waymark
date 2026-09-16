@@ -156,6 +156,21 @@ final class Track
         return $stmt->execute(['id' => $id, 'user_id' => $userId]);
     }
 
+    public function setVisibility(int $id, int $userId, string $visibility): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tracks
+                SET visibility = :visibility
+              WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL'
+        );
+
+        return $stmt->execute([
+            'visibility' => $visibility,
+            'id'         => $id,
+            'user_id'    => $userId,
+        ]);
+    }
+
     /**
      * Список треков пользователя (без мягко-удалённых), новые первыми.
      */

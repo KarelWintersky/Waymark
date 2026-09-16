@@ -52,6 +52,11 @@ final class AppConfig
                 'upload_max_videos'     => 5,
                 'max_poi_per_track'     => 100,
             ],
+
+            'links' => [
+                // Срок действия токена «по ссылке», дней; 0 — без срока.
+                'ttl_days' => 0,
+            ],
         ];
     }
 }
