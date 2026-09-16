@@ -167,6 +167,8 @@ final class PageController extends AbstractController
             ]
         );
 
+        $stats = self::geometryStats($geometry);
+
         $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
         $this->presenter->present([
@@ -177,8 +179,70 @@ final class PageController extends AbstractController
             'visibility_label'  => self::VISIBILITY_LABELS[$track['visibility']] ?? (string)$track['visibility'],
             'has_map'           => count($geometry) > 1,
             'points_count'      => count($geometry),
+            'stats_distance'    => $stats['distance_km'] !== null
+                ? str_replace('.', ',', sprintf('%.2f', $stats['distance_km']))
+                : null,
+            'stats_duration'    => $stats['duration_seconds'] !== null ? self::durationHms($stats['duration_seconds']) : null,
             'geometry_json'     => json_encode($geometry, $jsonFlags),
             'bbox_json'         => json_encode($bbox, $jsonFlags),
         ]);
+    }
+
+    /**
+     * Длина маршрута (гаверсинус, км) и длительность по времени засечек.
+     */
+    private static function geometryStats(array $geometry): array
+    {
+        $count = count($geometry);
+
+        $distanceKm = 0.0;
+        if ($count > 1) {
+            for ($i = 1; $i < $count; $i++) {
+                $a = $geometry[$i - 1];
+                $b = $geometry[$i];
+                if (!isset($a['lat'], $a['lng'], $b['lat'], $b['lng'])) {
+                    continue;
+                }
+                $distanceKm += self::haversineKm((float)$a['lat'], (float)$a['lng'], (float)$b['lat'], (float)$b['lng']);
+            }
+        }
+
+        $durationSeconds = null;
+        $first = $geometry[0] ?? null;
+        $last  = $geometry[$count - 1] ?? null;
+        $t1 = isset($first['time']) ? strtotime((string)$first['time']) : false;
+        $t2 = isset($last['time']) ? strtotime((string)$last['time']) : false;
+
+        if ($t1 !== false && $t2 !== false && $t2 >= $t1) {
+            $durationSeconds = $t2 - $t1;
+        }
+
+        return [
+            'distance_km'      => $count > 1 ? round($distanceKm, 2) : null,
+            'duration_seconds' => $durationSeconds,
+        ];
+    }
+
+    private static function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $radius = 6371.0;
+        $toRad = M_PI / 180;
+
+        $dLat = ($lat2 - $lat1) * $toRad;
+        $dLng = ($lng2 - $lng1) * $toRad;
+
+        $a = sin($dLat / 2) ** 2
+            + cos($lat1 * $toRad) * cos($lat2 * $toRad) * sin($dLng / 2) ** 2;
+
+        return 2 * $radius * asin(sqrt($a));
+    }
+
+    private static function durationHms(int $seconds): string
+    {
+        $h = intdiv($seconds, 3600);
+        $m = intdiv($seconds % 3600, 60);
+        $s = $seconds % 60;
+
+        return sprintf('%d:%02d:%02d', $h, $m, $s);
     }
 }

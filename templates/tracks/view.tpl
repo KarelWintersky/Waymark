@@ -10,7 +10,9 @@
         Автор: <a href="/users/{$track.user_id}">{$track.username|escape}</a>
         {if $track.date_recorded} · Запись: {$track.date_recorded}{/if}
         · Источник: {$track.source|upper}
-        {if $points_count|default:null} · Точек: {$points_count}{/if}
+        {if $stats_distance|default:null} · Длина: {$stats_distance} км{/if}
+        {if $stats_duration|default:null} · В пути: {$stats_duration}{/if}
+        {if $points_count|default:null} · Засечек: {$points_count}{/if}
     </div>
 
     {if $track.description|default:''}
