@@ -185,6 +185,9 @@ final class PageController extends AbstractController
             'stats_duration'    => $stats['duration_seconds'] !== null ? self::durationHms($stats['duration_seconds']) : null,
             'geometry_json'     => json_encode($geometry, $jsonFlags),
             'bbox_json'         => json_encode($bbox, $jsonFlags),
+            'default_lat'       => (float)$this->app->fromConfig('default.lat', 59.93863),
+            'default_lon'       => (float)$this->app->fromConfig('default.lon', 30.314113),
+            'default_zoom'      => (int)$this->app->fromConfig('default.zoom', 11),
         ]);
     }
 

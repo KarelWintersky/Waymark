@@ -199,6 +199,12 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 
 .page-head h1 { margin: 0; }
 
+.page-head__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .track-manager { display: flex; flex-direction: column; gap: 0.75rem; }
 
 .track-row {
@@ -359,6 +365,13 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
     border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
+}
+
+.track-map-tools {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 /* Футер */

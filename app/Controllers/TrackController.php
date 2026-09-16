@@ -93,6 +93,117 @@ final class TrackController extends AbstractController
         return $date->format('Y-m-d 00:00:00');
     }
 
+    /**
+     * Ручное создание трека: точки {lat,lng} с карты, JSON в поле `points`.
+     */
+    public function createManual(): void
+    {
+        $this->requireLogin();
+
+        $userId = (int)$this->auth->getUserId();
+        $error = null;
+        $old = [
+            'title'         => '',
+            'description'   => '',
+            'date_recorded' => '',
+        ];
+        $points = [];
+        $pointsJson = '[]';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = '';
+            $description = '';
+            $dateRecorded = null;
+
+            try {
+                $points = $this->parseManualPoints((string)($_POST['points'] ?? ''));
+
+                if (count($points) < 2) {
+                    throw new InvalidArgumentException('Добавьте на карте минимум 2 засечки');
+                }
+
+                $title = trim((string)($_POST['title'] ?? ''));
+                if ($title === '') {
+                    throw new InvalidArgumentException('Укажите название трека');
+                }
+
+                $description = trim((string)($_POST['description'] ?? ''));
+                $dateRecorded = $this->normalizeDate((string)($_POST['date_recorded'] ?? ''));
+
+                $lats = array_column($points, 'lat');
+                $lngs = array_column($points, 'lng');
+
+                $trackId = $this->track->create($userId, [
+                    'title'         => $title,
+                    'description'   => $description,
+                    'source'        => 'manual',
+                    'date_recorded' => $dateRecorded,
+                    'geometry'      => $points,
+                    'bbox'          => [min($lats), max($lats), min($lngs), max($lngs)],
+                ]);
+
+                $this->logger->info('Track created manually', [
+                    'track_id' => $trackId,
+                    'user_id'  => $userId,
+                    'points'   => count($points),
+                ]);
+                $this->redirect('/my/tracks');
+            } catch (Throwable $e) {
+                $this->logger->error('Track create (manual) failed', ['error' => $e->getMessage()]);
+                $error = $e->getMessage();
+                $old = [
+                    'title'         => $title,
+                    'description'   => $description,
+                    'date_recorded' => $dateRecorded ? substr($dateRecorded, 0, 10) : '',
+                ];
+                $pointsJson = json_encode($points, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        $this->presenter->present([
+            'template'          => 'tracks/create-manual.tpl',
+            'title'             => 'Создать трек — Waymark',
+            'map'               => true,
+            'old'               => $old,
+            'error'             => $error,
+            'draft_points_json' => $pointsJson,
+            'default_lat'       => (float)$this->app->fromConfig('default.lat', 59.93863),
+            'default_lon'       => (float)$this->app->fromConfig('default.lon', 30.314113),
+            'default_zoom'      => (int)$this->app->fromConfig('default.zoom', 11),
+        ]);
+    }
+
+    /**
+     * Разбор и нормализация засечек из JSON-поля `points`.
+     *
+     * @return array<int, array{lat: float, lng: float}>
+     *
+     * @throws InvalidArgumentException
+     */
+    private function parseManualPoints(string $raw): array
+    {
+        $decoded = json_decode($raw, true);
+
+        if (!is_array($decoded) || $decoded === []) {
+            throw new InvalidArgumentException('Не удалось прочитать точки маршрута');
+        }
+
+        $points = [];
+
+        foreach ($decoded as $item) {
+            if (!is_array($item) || !isset($item['lat'], $item['lng']) || !is_numeric($item['lat']) || !is_numeric($item['lng'])) {
+                continue;
+            }
+
+            $points[] = [
+                'lat' => round((float)$item['lat'], 6),
+                'lng' => round((float)$item['lng'], 6),
+            ];
+        }
+
+        return $points;
+    }
+
     public function myTracks(): void
     {
         $this->requireLogin();
@@ -102,7 +213,9 @@ final class TrackController extends AbstractController
 
         foreach ($tracks as &$row) {
             $row['visibility_label'] = self::VISIBILITY_LABELS[$row['visibility']] ?? $row['visibility'];
-            $row['source_file'] = $this->files->filePath($userId, (int)$row['id'], (string)$row['source']);
+            $row['source_file'] = $row['source'] === 'manual'
+                ? null
+                : $this->files->filePath($userId, (int)$row['id'], (string)$row['source']);
             $row['share_url'] = null;
 
             if ($row['visibility'] === 'protected') {
@@ -303,7 +416,9 @@ final class TrackController extends AbstractController
             'track'    => [
                 'id'          => $id,
                 'source'      => $track['source'],
-                'source_file' => $this->files->filePath($userId, $id, (string)$track['source']),
+                'source_file' => $track['source'] === 'manual'
+                    ? null
+                    : $this->files->filePath($userId, $id, (string)$track['source']),
             ],
             'old'      => $old,
             'error'    => $error,

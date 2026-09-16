@@ -41,10 +41,12 @@ return static function (): void {
     R::get('/register', [\App\Controllers\AuthController::class, 'register'], 'register');
     R::get('/password/forgot', [\App\Controllers\AuthController::class, 'forgotPassword'], 'password_forgot');
 
-    // Треки (CRUD, только авторизованные)
+// Треки (CRUD, только авторизованные)
     R::get('/my/tracks', [\App\Controllers\TrackController::class, 'myTracks'], 'my_tracks');
     R::get('/tracks/create', [\App\Controllers\TrackController::class, 'create'], 'track_create');
     R::post('/tracks/create', [\App\Controllers\TrackController::class, 'create']);
+    R::get('/tracks/create/manual', [\App\Controllers\TrackController::class, 'createManual'], 'track_create_manual');
+    R::post('/tracks/create/manual', [\App\Controllers\TrackController::class, 'createManual']);
     R::get('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit'], 'track_edit');
     R::post('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit']);
     R::post('/tracks/{id:\d+}/delete', [\App\Controllers\TrackController::class, 'delete'], 'track_delete');

@@ -1,7 +1,7 @@
 {extends file="layout.tpl"}
 {block name=content}
 <div class="page-head">
-    <h1>{if $mode === 'edit'}Редактирование трека{else}Новый трек{/if}</h1>
+    <h1>{if $mode === 'edit'}Редактирование трека{else}Загрузить трек{/if}</h1>
 </div>
 
 {if $error|default:null}
@@ -35,14 +35,16 @@
         <span>Файл трека {if $mode !== 'edit'}*{/if}</span>
         <input type="file" name="source_file" accept=".gpx,.json"
                {if $mode !== 'edit'}required{/if}>
-        {if $mode === 'edit'}
+        {if $mode === 'edit' && $track.source == 'manual'}
+            <small class="hint">Трек создан вручную, файла нет. Если загрузить файл — геометрия будет заменена.</small>
+        {elseif $mode === 'edit'}
             <small class="hint">Сейчас: {$track.source_file|escape}. Если новый файл не выбран — останется прежний.</small>
         {/if}
     </label>
 
     <div class="track-form__submit">
         <button type="submit" class="btn btn--primary">
-            {if $mode === 'edit'}Сохранить{else}Создать{/if}
+            {if $mode === 'edit'}Сохранить{else}Загрузить{/if}
         </button>
         <a class="link-muted" href="/my/tracks">Отмена</a>
     </div>

@@ -2,7 +2,10 @@
 {block name=content}
 <div class="page-head">
     <h1>Мои треки</h1>
-    <a class="btn btn--primary" href="/tracks/create">+ Новый трек</a>
+    <div class="page-head__actions">
+        <a class="btn btn--primary" href="/tracks/create/manual">Создать трек</a>
+        <a class="btn btn--ghost" href="/tracks/create">Загрузить трек</a>
+    </div>
 </div>
 
 {if $error|default:null}
@@ -17,7 +20,11 @@
                 <div class="track-row__title">{$track.title|escape}</div>
                 <div class="track-row__meta">
                     {if $track.date_recorded}Запись: {$track.date_recorded}{/if}
-                    Файл: {$track.source_file|escape} · создан {$track.created_at}
+                    {if $track.source == 'manual'}
+                        Создан вручную · создан {$track.created_at}
+                    {else}
+                        Файл: {$track.source_file|escape} · создан {$track.created_at}
+                    {/if}
                 </div>
             </div>
 
@@ -61,6 +68,6 @@
         {/foreach}
     </div>
 {else}
-    <p class="empty">Треков пока нет. Загрузите первый — кнопка «+ Новый трек».</p>
+    <p class="empty">Треков пока нет. Создайте первый кликами на карте («Создать трек») или загрузите файл GPX/JSON («Загрузить трек»).</p>
 {/if}
 {/block}

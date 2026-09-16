@@ -34,7 +34,10 @@
 <script>
 window.WAYMARK = {
     geometry: {$geometry_json|default:'[]'},
-    bbox:     {$bbox_json|default:'[null,null,null,null]'}
+    bbox:     {$bbox_json|default:'[null,null,null,null]'},
+    lat:      {$default_lat},
+    lon:      {$default_lon},
+    zoom:     {$default_zoom}
 };
 </script>
 {literal}
@@ -48,7 +51,12 @@ window.WAYMARK = {
         return;
     }
 
-    var map = L.map('track-map');
+    var bbox = data.bbox;
+    var center = (bbox && bbox.length === 4 && bbox[0] !== null && bbox[1] !== null)
+        ? [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2]
+        : [data.lat, data.lon];
+
+    var map = L.map('track-map').setView(center, data.zoom || 11);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -71,7 +79,6 @@ window.WAYMARK = {
             .addTo(map).bindTooltip('Финиш');
     }
 
-    var bbox = data.bbox;
     if (bbox && bbox.length === 4 && bbox[0] !== null && bbox[1] !== null) {
         map.fitBounds([[bbox[0], bbox[2]], [bbox[1], bbox[3]]]);
     } else {
