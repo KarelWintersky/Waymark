@@ -31,6 +31,7 @@ return static function (): void {
     // Публичные страницы
     R::get('/', [\App\Controllers\PageController::class, 'home'], 'home');
     R::get('/tracks', [\App\Controllers\PageController::class, 'tracks'], 'tracks');
+    R::get('/tracks/{id:\d+}', [\App\Controllers\PageController::class, 'view'], 'track_view');
     R::get('/users/{id:\d+}', [\App\Controllers\PageController::class, 'user'], 'user');
 
     // Авторизация

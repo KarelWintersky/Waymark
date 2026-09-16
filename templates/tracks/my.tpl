@@ -24,6 +24,7 @@
             <span class="badge badge--{$track.visibility}">{$track.visibility_label|escape}</span>
 
             <div class="track-row__actions">
+                <a class="btn btn--ghost" href="/tracks/{$track.id}">Показать на карте</a>
                 <a class="btn btn--ghost" href="/tracks/{$track.id}/edit">Изменить</a>
 
                 <button class="btn btn--ghost" type="button" disabled title="Появится в задачах 12-13">Опубликовать по ссылке</button>

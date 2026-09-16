@@ -20,6 +20,36 @@ use Arris\AppLogger\Monolog\Logger;
 use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
 
+// Статические файлы public/: раздача напрямую (в проде — nginx `try_files $uri`,
+// здесь — эмуляция для встроенного dev-сервера `php -S`).
+$uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+if ($uriPath !== '/') {
+    $real = realpath(__DIR__ . $uriPath);
+
+    if ($real !== false && str_starts_with($real, __DIR__) && is_file($real)) {
+        $mime = match (strtolower((string)pathinfo($real, PATHINFO_EXTENSION))) {
+            'css', 'css.map'   => 'text/css; charset=utf-8',
+            'js', 'mjs'        => 'application/javascript; charset=utf-8',
+            'png'              => 'image/png',
+            'jpg', 'jpeg'      => 'image/jpeg',
+            'gif'              => 'image/gif',
+            'webp'             => 'image/webp',
+            'svg'              => 'image/svg+xml',
+            'ico'              => 'image/x-icon',
+            'woff2'            => 'font/woff2',
+            'woff'             => 'font/woff',
+            'ttf'              => 'font/ttf',
+            default            => 'application/octet-stream',
+        };
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . (string)filesize($real));
+        readfile($real);
+        exit;
+    }
+}
+
 $app = \App\App::getInstance([\App\App::configFilePath()]);
 
 date_default_timezone_set((string)$app->fromConfig('app.timezone', 'UTC'));

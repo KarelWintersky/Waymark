@@ -306,6 +306,45 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 
 .link-muted:hover { color: var(--accent); text-decoration: underline; }
 
+/* Страница трека с картой */
+.track-view__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+}
+
+.track-view__head h1 { margin: 0; }
+
+.track-view__meta {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.track-view__meta a { color: var(--muted); }
+
+.track-view__meta a:hover { color: var(--accent); }
+
+.track-view__desc {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    white-space: pre-wrap;
+}
+
+.track-map-wrap { margin-top: 1.4rem; }
+
+.track-map {
+    height: 55vh;
+    min-height: 320px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 /* Футер */
 .site-footer {
     background: var(--fg);

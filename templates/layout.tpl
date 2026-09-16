@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{$title|default:'Waymark'}</title>
     <link rel="stylesheet" href="/assets/style.css">
+    {if $map|default:false}
+        <link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css">
+    {/if}
 </head>
 <body>
 <header class="site-header">
@@ -34,5 +37,9 @@
 <footer class="site-footer">
     <div class="container">&copy; {$year} Waymark — фото-воспоминания о путешествиях</div>
 </footer>
+{if $map|default:false}
+    <script src="/assets/vendor/leaflet/leaflet.js"></script>
+{/if}
+{block name=scripts}{/block}
 </body>
 </html>

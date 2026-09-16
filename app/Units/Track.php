@@ -92,6 +92,24 @@ final class Track
     }
 
     /**
+     * Трек вместе с автором (для публичной страницы трека).
+     */
+    public function findWithUser(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*, u.username, u.deleted_at AS user_deleted
+               FROM tracks t
+               JOIN users u ON u.id = t.user_id
+              WHERE t.id = :id AND t.deleted_at IS NULL'
+        );
+        $stmt->execute(['id' => $id]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /**
      * Трек с проверкой владельца (для страниц редактирования/удаления).
      */
     public function findMine(int $id, int $userId): ?array
