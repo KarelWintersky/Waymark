@@ -33,6 +33,7 @@
             <div class="track-row__actions">
                 <a class="btn btn--ghost" href="/tracks/{$track.id}">Показать на карте</a>
                 <a class="btn btn--ghost" href="/tracks/{$track.id}/edit">Изменить</a>
+                <a class="btn btn--ghost" href="/tracks/{$track.id}/media">Медиа</a>
 
                 {if $track.visibility == 'private'}
                     <form method="post" action="/tracks/{$track.id}/share" class="inline-form">

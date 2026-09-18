@@ -175,6 +175,8 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 
 .alert--info { background: #eef4ee; color: #3c6b4f; border-color: #cfe0d4; }
 
+.alert--success { background: #e8f4ea; color: #2f6f45; border-color: #c6e3cc; }
+
 .alert code {
     font-size: 0.85em;
     background: rgba(0, 0, 0, 0.06);
@@ -444,3 +446,117 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 h1, h2 { line-height: 1.25; }
 
 h2 { margin-top: 2rem; }
+
+/* ── Медиа: загрузка и галерея фотографий трека ── */
+
+.media-section { margin-top: 2rem; }
+
+.media-section h2 { margin-top: 1.6rem; }
+
+.media-upload {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem;
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-top: 0.75rem;
+}
+
+.media-upload input[type="file"] {
+    font-size: 0.9rem;
+    max-width: 100%;
+}
+
+.media-upload .hint {
+    width: 100%;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.media-card__coords { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ── Медиа: таблица управления фотографиями (страница /tracks/{id}/media) ── */
+
+.media-table-wrap {
+    margin-top: 0.75rem;
+    overflow-x: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.media-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.media-table th {
+    text-align: left;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.media-table td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.media-table tbody tr:last-child td { border-bottom: none; }
+
+.media-table tbody tr:hover { background: var(--bg-soft, rgba(0,0,0,0.02)); }
+
+.media-table__thumb { width: 84px; }
+
+.media-thumb {
+    display: block;
+    width: 72px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #eadfd6;
+}
+
+.media-table__name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.media-table__num { white-space: nowrap; }
+
+.media-table__actions { width: 1%; white-space: nowrap; }
+
+.media-desc-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.media-desc-form input[type="text"] {
+    width: 200px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg);
+}
+
+.media-desc-form input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent, #3c6b4f);
+}

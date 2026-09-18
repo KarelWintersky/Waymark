@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Units\MediaFiles;
 use App\Units\Track;
 use App\Units\TrackFiles;
 use App\Units\TrackImporter;
 use App\Units\TrackLinks;
+use App\Units\TrackMedia;
 use Arris\Controllers\AbstractController;
 use Arris\DelightAuth\Auth\Auth;
 use DateTime;
@@ -39,6 +41,10 @@ final class TrackController extends AbstractController
 
     private TrackLinks $links;
 
+    private MediaFiles $mediaFiles;
+
+    private TrackMedia $media;
+
     public function __construct(
         ?\Arris\App $app = null,
         ?LoggerInterface $logger = null,
@@ -51,6 +57,8 @@ final class TrackController extends AbstractController
         $this->files = new TrackFiles();
         $this->importer = new TrackImporter();
         $this->links = new TrackLinks($this->app->pdo());
+        $this->mediaFiles = new MediaFiles();
+        $this->media = new TrackMedia($this->app->pdo());
     }
 
     private function requireLogin(): void
@@ -66,9 +74,36 @@ final class TrackController extends AbstractController
         exit;
     }
 
+    /**
+     * Флэш-сообщение на следующий запрос (читается и снимается на странице медиа / трека).
+     */
+    private function flash(string $type, string $message): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $_SESSION['waymark_flash'] = ['type' => $type, 'message' => $message];
+    }
+
     private function maxUploadBytes(): int
     {
         return (int)$this->app->fromConfig('limits.upload_max_size_bytes', 50 * 1024 * 1024);
+    }
+
+    /**
+     * Человекочитаемый размер файла для таблицы медиа.
+     */
+    private function humanBytes(int $bytes): string
+    {
+        if ($bytes >= 1024 * 1024) {
+            return rtrim(rtrim(number_format($bytes / (1024 * 1024), 1, '.', ' '), '0'), '.') . ' МБ';
+        }
+        if ($bytes >= 1024) {
+            return rtrim(rtrim(number_format($bytes / 1024, 1, '.', ' '), '0'), '.') . ' КБ';
+        }
+
+        return $bytes . ' Б';
     }
 
     /**
@@ -436,6 +471,207 @@ final class TrackController extends AbstractController
         }
 
         $this->redirect('/my/tracks');
+    }
+
+    /**
+     * Страница «Медиа» трека — единственное место управления фотографиями.
+     *
+     * GET  — форма загрузки + таблица загруженных фото (превью, название,
+     *        размер, координаты, направление взгляда, редактирование описания, удаление).
+     * POST — мультизагрузка фотографий к треку (поле photos[]), см. storeUploadedPhotos().
+     */
+    public function media(int $id): void
+    {
+        $this->requireLogin();
+
+        $userId = (int)$this->auth->getUserId();
+        $track = $this->track->findMine($id, $userId);
+
+        if ($track === null) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Страница не найдена',
+            ], 404);
+
+            return;
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $this->storeUploadedPhotos($id, $track);
+
+            return;
+        }
+
+        $media = $this->media->listForTrack($id);
+
+        foreach ($media as &$row) {
+            $row['size_human'] = $this->humanBytes((int)($row['file_size'] ?? 0));
+        }
+        unset($row);
+
+        $flash = null;
+        if (session_status() !== PHP_SESSION_NONE && isset($_SESSION['waymark_flash'])) {
+            $flash = $_SESSION['waymark_flash'];
+            unset($_SESSION['waymark_flash']);
+        }
+
+        $this->presenter->present([
+            'template'          => 'tracks/media.tpl',
+            'title'             => 'Медиа — ' . $track['title'] . ' — Waymark',
+            'track'             => $track,
+            'media'             => $media,
+            'flash'             => $flash,
+            'upload_max_images' => (int)$this->app->fromConfig('limits.upload_max_images', 10),
+        ]);
+    }
+
+    /**
+     * Мультизагрузка фотографий к треку: POST /tracks/{id}/media (поле photos[]).
+     *
+     * Каждый файл проходит через arris.php-file-upload (валидация MIME/размера,
+     * перемещение в storage/media/<user>/<track>/), после чего из файла читается
+     * EXIF (время съёмки, координаты, направление взгляда) и в таблицу media
+     * пишется запись вместе с координатами/направлением.
+     *
+     * @param array $track строка трека из findMine()
+     */
+    private function storeUploadedPhotos(int $id, array $track): void
+    {
+        $userId = (int)$this->auth->getUserId();
+
+        $files = $_FILES['photos'] ?? null;
+
+        // Нормализация: поле photos[] — массив; единичный файл сворачиваем в массив.
+        if (is_array($files) && isset($files['name']) && !is_array($files['name'])) {
+            foreach ($files as $key => $value) {
+                $files[$key] = [$value];
+            }
+        }
+
+        $total = is_array($files) && isset($files['name']) ? count($files['name']) : 0;
+
+        if ($total === 0) {
+            $this->flash('error', 'Выберите фотографии для загрузки');
+            $this->redirect('/tracks/' . $id . '/media');
+        }
+
+        $maxTotal = (int)$this->app->fromConfig('limits.upload_max_images', 10);
+        $room = max(0, $maxTotal - $this->media->countForTrack($id));
+        $maxBytes = $this->maxUploadBytes();
+
+        $uploaded = 0;
+        $errors = [];
+
+        foreach ($files['name'] as $index => $name) {
+            if ($name === '') {
+                continue;
+            }
+
+            if ($uploaded >= $room) {
+                $errors[] = 'Достигнут лимит фотографий на трек (' . $maxTotal . ' шт.)';
+                break;
+            }
+
+            try {
+                $stored = $this->mediaFiles->store($userId, $id, $files, (int)$index, $maxBytes);
+
+                $this->media->insert($id, [
+                    ...$stored,
+                    'visibility' => $track['visibility'] === 'public' ? 'public' : 'private',
+                ]);
+
+                $uploaded++;
+            } catch (Throwable $e) {
+                $this->logger->error('Photo upload failed', [
+                    'track_id' => $id,
+                    'user_id'  => $userId,
+                    'file'     => (string)$name,
+                    'error'    => $e->getMessage(),
+                ]);
+                $errors[] = $e->getMessage();
+            }
+        }
+
+        $this->logger->info('Photos uploaded', [
+            'track_id' => $id,
+            'user_id'  => $userId,
+            'uploaded' => $uploaded,
+            'failed'   => count($errors),
+        ]);
+
+        $parts = [];
+        if ($uploaded > 0) {
+            $parts[] = 'Загружено фото: ' . $uploaded;
+        }
+        if ($errors !== []) {
+            $parts[] = 'Ошибки (' . count($errors) . '): ' . implode('; ', array_slice($errors, 0, 3));
+        }
+
+        $this->flash($errors !== [] ? 'error' : 'success', $parts !== [] ? implode('. ', $parts) : 'Файлы не загружены');
+        $this->redirect('/tracks/' . $id . '/media');
+    }
+
+    /**
+     * Редактирование описания фотографии: POST /tracks/{id}/media/{mediaId}/description.
+     */
+    public function updateMediaDescription(int $id, int $mediaId): void
+    {
+        $this->requireLogin();
+        $this->requireMine($id);
+
+        if ($this->media->find($mediaId, $id) === null) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Страница не найдена',
+            ], 404);
+
+            exit;
+        }
+
+        $description = trim((string)($_POST['description'] ?? ''));
+
+        if (mb_strlen($description) > 500) {
+            $this->flash('error', 'Описание слишком длинное (максимум 500 символов)');
+            $this->redirect('/tracks/' . $id . '/media');
+        }
+
+        $this->media->updateDescription($mediaId, $id, $description);
+
+        $this->logger->info('Media description updated', [
+            'track_id' => $id,
+            'media_id' => $mediaId,
+            'user_id'  => (int)$this->auth->getUserId(),
+        ]);
+
+        $this->flash('success', 'Описание обновлено');
+        $this->redirect('/tracks/' . $id . '/media');
+    }
+
+    /**
+     * Мягкое удаление фотографии: POST /tracks/{id}/media/{mediaId}/delete.
+     */
+    public function deleteMedia(int $id, int $mediaId): void
+    {
+        $this->requireLogin();
+        $this->requireMine($id);
+
+        if (!$this->media->softDelete($mediaId, $id)) {
+            $this->presenter->present([
+                'template' => 'errors/404.tpl',
+                'title'    => 'Страница не найдена',
+            ], 404);
+
+            exit;
+        }
+
+        $this->logger->info('Media soft-deleted', [
+            'track_id' => $id,
+            'media_id' => $mediaId,
+            'user_id'  => (int)$this->auth->getUserId(),
+        ]);
+
+        $this->flash('success', 'Фотография удалена');
+        $this->redirect('/tracks/' . $id . '/media');
     }
 
     /**

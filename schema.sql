@@ -160,6 +160,7 @@ CREATE TABLE `media` (
     `file_size`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `latitude`      DECIMAL(9,6) NULL,
     `longitude`     DECIMAL(9,6) NULL,
+    `direction`     INT NULL DEFAULT 0 COMMENT 'направление взгляда (GPSImgDirection, градусы)',
     `taken_at`      DATETIME NULL,
     `description`   TEXT NULL,
     `position`      INT NOT NULL DEFAULT 0,

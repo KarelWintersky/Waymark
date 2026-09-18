@@ -28,7 +28,7 @@
         "karelwintersky/arris.presenter": "^1.4",
         "karelwintersky/arris.cache": "^1.0",
         "karelwintersky/arris.delight-php-auth": "^0.99.9",
-        "karelwintersky/arris.php-file-upload": "*",
+        "karelwintersky/arris.php-file-upload": "^0.4.0",
         "karelwintersky/arris.toolkit.mimetypes": "^2.1",
         "symfony/yaml": "^7.4",
         "laravel/prompts": "^0.3.18",
@@ -36,7 +36,8 @@
         "league/flysystem": "^3.35",
         "league/flysystem-local": "^3.31",
         "spatie/temporary-directory": "^2.4",
-        "sibyx/phpgpx": "^1.3"
+        "sibyx/phpgpx": "^1.3",
+        "lychee-org/php-exif": "^1.3"
     },
     "autoload": {
         "files": [

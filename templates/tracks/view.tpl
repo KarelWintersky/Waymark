@@ -6,6 +6,10 @@
         <span class="badge badge--{$track.visibility}">{$visibility_label|escape}</span>
     </div>
 
+    {if $flash|default:null}
+        <div class="alert alert--{$flash.type}">{$flash.message|escape}</div>
+    {/if}
+
     <div class="track-view__meta">
         Автор: <a href="/users/{$track.user_id}">{$track.username|escape}</a>
         {if $track.date_recorded} · Запись: {$track.date_recorded}{/if}

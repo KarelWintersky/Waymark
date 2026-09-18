@@ -51,6 +51,12 @@ return static function (): void {
     R::post('/tracks/{id:\d+}/edit', [\App\Controllers\TrackController::class, 'edit']);
     R::post('/tracks/{id:\d+}/delete', [\App\Controllers\TrackController::class, 'delete'], 'track_delete');
 
+    // Медиа: страница управления фотографиями трека (GET — таблица, POST — мультизагрузка)
+    R::get('/tracks/{id:\d+}/media', [\App\Controllers\TrackController::class, 'media'], 'track_media');
+    R::post('/tracks/{id:\d+}/media', [\App\Controllers\TrackController::class, 'media']);
+    R::post('/tracks/{id:\d+}/media/{mediaId:\d+}/description', [\App\Controllers\TrackController::class, 'updateMediaDescription'], 'track_media_description');
+    R::post('/tracks/{id:\d+}/media/{mediaId:\d+}/delete', [\App\Controllers\TrackController::class, 'deleteMedia'], 'track_media_delete');
+
     // Публикация (задачи 12-13)
     R::post('/tracks/{id:\d+}/share', [\App\Controllers\TrackController::class, 'share'], 'track_share');
     R::post('/tracks/{id:\d+}/publish', [\App\Controllers\TrackController::class, 'publish'], 'track_publish');

@@ -48,7 +48,7 @@ final class AppConfig
 
             'limits' => [
                 'upload_max_size_bytes' => 50 * 1024 * 1024, // 50 MB
-                'upload_max_images'     => 10,
+                'upload_max_images'     => 50,
                 'upload_max_videos'     => 5,
                 'max_poi_per_track'     => 100,
             ],

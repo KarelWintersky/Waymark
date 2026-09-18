@@ -21,13 +21,28 @@ use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
 
 // Статические файлы public/: раздача напрямую (в проде — nginx `try_files $uri`,
-// здесь — эмуляция для встроенного dev-сервера `php -S`).
+// здесь — эмуляция для встроенного dev-сервера `php -S`). Файлы storage/media/
+// (симлинк public/storage → ../storage) тоже отдаются — аналог X-Accel в dev.
 $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
 if ($uriPath !== '/') {
     $real = realpath(__DIR__ . $uriPath);
 
-    if ($real !== false && str_starts_with($real, __DIR__) && is_file($real)) {
+    $allowedRoots = [__DIR__ . '/'];
+    $mediaRoot = realpath(__DIR__ . '/storage/media');
+    if ($mediaRoot !== false) {
+        $allowedRoots[] = $mediaRoot . '/';
+    }
+
+    $inAllowedRoot = false;
+    foreach ($allowedRoots as $root) {
+        if ($real !== false && str_starts_with($real . '/', $root)) {
+            $inAllowedRoot = true;
+            break;
+        }
+    }
+
+    if ($inAllowedRoot && is_file($real)) {
         $mime = match (strtolower((string)pathinfo($real, PATHINFO_EXTENSION))) {
             'css', 'css.map'   => 'text/css; charset=utf-8',
             'js', 'mjs'        => 'application/javascript; charset=utf-8',
