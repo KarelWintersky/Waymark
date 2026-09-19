@@ -4,6 +4,7 @@
     <div class="track-view__head">
         <h1 class="track-view__title">{$track.title|escape}</h1>
         <span class="badge badge--{$track.visibility}">{$visibility_label|escape}</span>
+        <a class="btn btn--ghost track-view__to-my" href="/my/tracks">Мои треки</a>
     </div>
 
     {if $flash|default:null}

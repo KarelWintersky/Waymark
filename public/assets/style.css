@@ -27,7 +27,7 @@ body {
 }
 
 .container {
-    width: min(960px, 100% - 2rem);
+    width: min(1080px, 100% - 2rem);
     margin: 0 auto;
 }
 
@@ -296,7 +296,7 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 .share-chip a:hover { text-decoration: underline; }
 
 /* Форма трека */
-.track-form { display: grid; gap: 1rem; max-width: 42rem; }
+.track-form { display: grid; gap: 1rem; }
 
 .track-form textarea {
     width: 100%;
@@ -339,6 +339,8 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 }
 
 .track-view__head h1 { margin: 0; }
+
+.track-view__to-my { margin-left: auto; }
 
 .track-view__meta {
     margin-top: 0.5rem;
@@ -389,7 +391,7 @@ main.container { flex: 1; padding: 2rem 0 3rem; }
 
 .hero h1 { font-size: 2.4rem; margin: 0 0 0.5rem; }
 
-.lead { font-size: 1.15rem; color: var(--muted); margin: 0; max-width: 40rem; }
+.lead { font-size: 1.15rem; color: var(--muted); margin: 0; }
 
 /* Список треков */
 .track-list {
