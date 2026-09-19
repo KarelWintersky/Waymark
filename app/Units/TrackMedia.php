@@ -26,9 +26,11 @@ final class TrackMedia
         $stmt = $this->pdo->prepare(
             "INSERT INTO media
                 (track_id, type, file_path, original_name, mime_type, file_size,
+                 width, height,
                  latitude, longitude, direction, taken_at, description, position, visibility)
              VALUES
                 (:track_id, 'photo', :file_path, :original_name, :mime_type, :file_size,
+                 :width, :height,
                  :latitude, :longitude, :direction, :taken_at, :description, :position, :visibility)"
         );
 
@@ -38,6 +40,8 @@ final class TrackMedia
             'original_name' => $data['original_name'] ?? '',
             'mime_type'     => $data['mime_type'] ?? '',
             'file_size'     => $data['file_size'] ?? 0,
+            'width'         => $data['width'] ?? null,
+            'height'        => $data['height'] ?? null,
             'latitude'      => $data['latitude'] ?? null,
             'longitude'     => $data['longitude'] ?? null,
             'direction'     => $data['direction'] ?? null,
@@ -103,6 +107,35 @@ final class TrackMedia
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row === false ? null : $row;
+    }
+
+    /**
+     * Есть ли уже на треке фото с теми же координатами и размером
+     * (линейным — width/height — и размером файла). Дубликаты пропускаются при загрузке.
+     *
+     * Координаты сравниваются null-безопасно (два фото без GPS считаются совпавшими),
+     * но width/height на дубликат-проверку должны быть заданы (файл — валидное изображение).
+     */
+    public function isDuplicate(int $trackId, ?float $latitude, ?float $longitude, ?int $width, ?int $height, int $fileSize): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT EXISTS(
+                SELECT 1 FROM media
+                 WHERE track_id = :track_id AND type = 'photo' AND deleted_at IS NULL
+                   AND latitude <=> :latitude AND longitude <=> :longitude
+                   AND width = :width AND height = :height AND file_size = :file_size
+             )"
+        );
+        $stmt->execute([
+            'track_id'  => $trackId,
+            'latitude'  => $latitude,
+            'longitude' => $longitude,
+            'width'     => $width,
+            'height'    => $height,
+            'file_size' => $fileSize,
+        ]);
+
+        return (bool)$stmt->fetchColumn();
     }
 
     /**

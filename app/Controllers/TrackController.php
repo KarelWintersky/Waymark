@@ -560,6 +560,7 @@ final class TrackController extends AbstractController
         $maxBytes = $this->maxUploadBytes();
 
         $uploaded = 0;
+        $duplicates = 0;
         $errors = [];
 
         foreach ($files['name'] as $index => $name) {
@@ -573,6 +574,30 @@ final class TrackController extends AbstractController
             }
 
             try {
+                // Дубликат: те же координаты и тот же размер (линейный + размер файла).
+                // Проверка до записи на диск; требуется валидное изображение (width/height).
+                $tmpPath = (string)($files['tmp_name'][$index] ?? '');
+                $probe = [
+                    ...$this->mediaFiles->imageDimensions($tmpPath),
+                    ...$this->mediaFiles->extractExif($tmpPath),
+                ];
+
+                if (
+                    $probe['width'] !== null
+                    && $probe['height'] !== null
+                    && $this->media->isDuplicate(
+                        $id,
+                        $probe['latitude'],
+                        $probe['longitude'],
+                        $probe['width'],
+                        $probe['height'],
+                        (int)($files['size'][$index] ?? 0)
+                    )
+                ) {
+                    $duplicates++;
+                    continue;
+                }
+
                 $stored = $this->mediaFiles->store($userId, $id, $files, (int)$index, $maxBytes);
 
                 $this->media->insert($id, [
@@ -593,15 +618,19 @@ final class TrackController extends AbstractController
         }
 
         $this->logger->info('Photos uploaded', [
-            'track_id' => $id,
-            'user_id'  => $userId,
-            'uploaded' => $uploaded,
-            'failed'   => count($errors),
+            'track_id'   => $id,
+            'user_id'    => $userId,
+            'uploaded'   => $uploaded,
+            'duplicates' => $duplicates,
+            'failed'     => count($errors),
         ]);
 
         $parts = [];
         if ($uploaded > 0) {
             $parts[] = 'Загружено фото: ' . $uploaded;
+        }
+        if ($duplicates > 0) {
+            $parts[] = 'Дубликатов пропущено: ' . $duplicates;
         }
         if ($errors !== []) {
             $parts[] = 'Ошибки (' . count($errors) . '): ' . implode('; ', array_slice($errors, 0, 3));

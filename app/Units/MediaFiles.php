@@ -80,7 +80,23 @@ final class MediaFiles
             'original_name' => (string)$result->originalName,
             'mime_type'     => (string)$result->mimeType,
             'file_size'     => (int)$result->size,
+            ...$this->imageDimensions((string)$result->fullPath),
             ...$this->extractExif((string)$result->fullPath),
+        ];
+    }
+
+    /**
+     * Линейные размеры изображения (пиксели) через getimagesize.
+     *
+     * @return array{width: ?int, height: ?int}
+     */
+    public function imageDimensions(string $fullPath): array
+    {
+        [$width, $height] = @getimagesize($fullPath) ?: [null, null];
+
+        return [
+            'width'  => is_int($width) ? $width : null,
+            'height' => is_int($height) ? $height : null,
         ];
     }
 

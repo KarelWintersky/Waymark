@@ -158,6 +158,8 @@ CREATE TABLE `media` (
     `original_name` VARCHAR(255) NOT NULL DEFAULT '',
     `mime_type`     VARCHAR(127) NOT NULL DEFAULT '',
     `file_size`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `width`         INT UNSIGNED NULL COMMENT 'линейный размер (px)',
+    `height`        INT UNSIGNED NULL COMMENT 'линейный размер (px)',
     `latitude`      DECIMAL(9,6) NULL,
     `longitude`     DECIMAL(9,6) NULL,
     `direction`     INT NULL DEFAULT 0 COMMENT 'направление взгляда (GPSImgDirection, градусы)',
