@@ -17,6 +17,7 @@
         {if $stats_distance|default:null} · Длина: {$stats_distance} км{/if}
         {if $stats_duration|default:null} · В пути: {$stats_duration}{/if}
         {if $points_count|default:null} · Засечек: {$points_count}{/if}
+        {if $photo_points_count|default:0} · Фото на карте: {$photo_points_count}{/if}
     </div>
 
     {if $track.description|default:''}
@@ -41,13 +42,20 @@ window.WAYMARK = {
     bbox:     {$bbox_json|default:'[null,null,null,null]'},
     lat:      {$default_lat},
     lon:      {$default_lon},
-    zoom:     {$default_zoom}
+    zoom:     {$default_zoom},
+    photoPoints: {$photo_points_json|default:'[]'}
 };
 </script>
 {literal}
 <script>
 (function () {
     'use strict';
+
+    function esc(value) {
+        return String(value).replace(/[&<>"']/g, function (char) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+        });
+    }
 
     var data = window.WAYMARK;
 
@@ -83,11 +91,48 @@ window.WAYMARK = {
             .addTo(map).bindTooltip('Финиш');
     }
 
+    // Точки фотографий с координатами (кликабельные).
+    var photoPoints = data.photoPoints || [];
+
+    photoPoints.forEach(function (point) {
+        if (!point || point.lat === undefined || point.lng === undefined) {
+            return;
+        }
+
+        var url = point.url || '';
+        var content = '<figure class="photo-popup">' +
+            '<a href="' + esc(url) + '" target="_blank" rel="noopener">' +
+            '<img src="' + esc(url) + '" alt="" loading="lazy"></a>' +
+            '<figcaption>' +
+            (point.name ? '<div class="photo-popup__name">' + esc(point.name) + '</div>' : '') +
+            (point.taken_at ? '<div class="photo-popup__taken">' + esc(point.taken_at) + '</div>' : '') +
+            '<a class="photo-popup__link" href="' + esc(url) + '" target="_blank" rel="noopener">Открыть оригинал</a>' +
+            '</figcaption></figure>';
+
+        L.circleMarker([point.lat, point.lng], {
+            radius: 7,
+            color: '#ffffff',
+            weight: 2,
+            fillColor: '#1f6feb',
+            fillOpacity: 1
+        }).addTo(map)
+            .bindTooltip(point.name ? 'Фото: ' + point.name : 'Фото')
+            .bindPopup(content, { maxWidth: 340 });
+    });
+
+    var bounds = line.getBounds();
+
+    photoPoints.forEach(function (point) {
+        if (point && point.lat !== undefined && point.lng !== undefined) {
+            bounds.extend([point.lat, point.lng]);
+        }
+    });
+
     if (bbox && bbox.length === 4 && bbox[0] !== null && bbox[1] !== null) {
-        map.fitBounds([[bbox[0], bbox[2]], [bbox[1], bbox[3]]]);
-    } else {
-        map.fitBounds(line.getBounds());
+        bounds.extend([[bbox[0], bbox[2]], [bbox[1], bbox[3]]]);
     }
+
+    map.fitBounds(bounds, { padding: [20, 20] });
 })();
 </script>
 {/literal}

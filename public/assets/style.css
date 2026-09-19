@@ -560,3 +560,24 @@ h2 { margin-top: 2rem; }
     outline: none;
     border-color: var(--accent, #3c6b4f);
 }
+/* ── Точки фотографий на карте трека ── */
+
+.photo-popup { margin: 0; }
+
+.photo-popup img {
+    display: block;
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #eadfd6;
+    margin-bottom: 0.5rem;
+}
+
+.photo-popup figcaption { font-size: 0.85rem; line-height: 1.45; }
+
+.photo-popup__name { font-weight: 600; color: var(--fg); }
+
+.photo-popup__taken { color: var(--muted); }
+
+.photo-popup__link { display: inline-block; margin-top: 0.35rem; }

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Units\Track;
 use App\Units\TrackLinks;
+use App\Units\TrackMedia;
 use Arris\Controllers\AbstractController;
 use PDO;
 
@@ -171,23 +172,41 @@ final class PageController extends AbstractController
 
         $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
+        // Точки фотографий с координатами (для сопоставления фото с треком на карте).
+        $photoPoints = [];
+        foreach ((new TrackMedia($this->pdo))->listForTrack((int)$track['id']) as $row) {
+            if ($row['latitude'] === null || $row['longitude'] === null) {
+                continue;
+            }
+
+            $photoPoints[] = [
+                'lat'      => round((float)$row['latitude'], 6),
+                'lng'      => round((float)$row['longitude'], 6),
+                'url'      => '/storage/media/' . $row['file_path'],
+                'name'     => (string)$row['original_name'],
+                'taken_at' => $row['taken_at'] !== null ? (string)$row['taken_at'] : null,
+            ];
+        }
+
         $this->presenter->present([
-            'template'         => 'tracks/view.tpl',
-            'title'            => $track['title'] . ' — Waymark',
-            'map'              => true,
-            'track'            => $track,
-            'visibility_label' => self::VISIBILITY_LABELS[$track['visibility']] ?? (string)$track['visibility'],
-            'has_map'          => count($geometry) > 1,
-            'points_count'     => count($geometry),
-            'stats_distance'   => $stats['distance_km'] !== null
+            'template'           => 'tracks/view.tpl',
+            'title'              => $track['title'] . ' — Waymark',
+            'map'                => true,
+            'track'              => $track,
+            'visibility_label'   => self::VISIBILITY_LABELS[$track['visibility']] ?? (string)$track['visibility'],
+            'has_map'            => count($geometry) > 1,
+            'points_count'       => count($geometry),
+            'photo_points_count' => count($photoPoints),
+            'photo_points_json'  => json_encode($photoPoints, $jsonFlags),
+            'stats_distance'     => $stats['distance_km'] !== null
                 ? str_replace('.', ',', sprintf('%.2f', $stats['distance_km']))
                 : null,
-            'stats_duration'   => $stats['duration_seconds'] !== null ? self::durationHms($stats['duration_seconds']) : null,
-            'geometry_json'    => json_encode($geometry, $jsonFlags),
-            'bbox_json'        => json_encode($bbox, $jsonFlags),
-            'default_lat'      => (float)$this->app->fromConfig('default.lat', 59.93863),
-            'default_lon'      => (float)$this->app->fromConfig('default.lon', 30.314113),
-            'default_zoom'     => (int)$this->app->fromConfig('default.zoom', 11),
+            'stats_duration'     => $stats['duration_seconds'] !== null ? self::durationHms($stats['duration_seconds']) : null,
+            'geometry_json'      => json_encode($geometry, $jsonFlags),
+            'bbox_json'          => json_encode($bbox, $jsonFlags),
+            'default_lat'        => (float)$this->app->fromConfig('default.lat', 59.93863),
+            'default_lon'        => (float)$this->app->fromConfig('default.lon', 30.314113),
+            'default_zoom'       => (int)$this->app->fromConfig('default.zoom', 11),
         ]);
     }
 
